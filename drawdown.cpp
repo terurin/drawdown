@@ -16,9 +16,9 @@ int main(int argc,char** argv){
         ss<<line<<endl;
     }
     wcout<<"result"<<endl;
-    auto list = load_words(ss.str());
+    auto list = parse_words(ss.str());
     for (auto &it: list){
-        wcout<<it<<L',';
+        //wcout<<it.value<<":"<<(int)it.type<<endl;
     }
 
 

@@ -1,42 +1,36 @@
 #include "format.hpp"
 #include <cwctype>
 #include <sstream>
+#include <stdlib.h>
 using namespace std;
 namespace drawdown {
 
-charactor_type get_type(wchar_t c) {
-  auto in = [](wchar_t x, const wstring &text) {
-    return text.find(x) != wstring::npos;
-  };
-
-  if (iswspace(c) || iswcntrl(c)) {
-    return charactor_type::space;
-  } else if (in(c, L"+-*/=~^\\?@:;.#!$%&'|")) {
-    return charactor_type::mark;
-  } else if (in(c, L"(){}\"[]\'")) {
-    return charactor_type::bracket;
-  } else {
-    return charactor_type::label;
-  }
+std::wstring to_wstring(word_type word) {
+    switch (word) {
+    case word_type::label: return L"label";
+    case word_type::end: return L"end";
+    default: return L"unknown";
+    }
 }
 
-std::vector<std::wstring> load_words(const std::wstring &sprict) {
-  std::vector<std::wstring> result;
-  wstring buf;
-  if (sprict.length() > 0) {
-    buf += sprict[0];
-  }
-  for (int idx = 1; idx < sprict.length(); idx++) {
-    const wchar_t last = sprict[idx - 1], now = sprict[idx];
-    if (get_type(last) != get_type(now)&&buf.length()>0) {
-      result.emplace_back(buf);
-      buf.clear();
-    }
-    if (get_type(now) != charactor_type::space) {
-      buf += now;
-    }
-  }
+std::vector<word*> parse_words(const std::wstring &plain) {
+    std::vector<word*> result;
 
-  return result;
+    for (const wchar_t *it = plain.c_str(); *it != L'\0'; it++) {
+        if (iswspace(*it)) {
+            continue;
+        }
+        // label
+        if (iswalpha(*it)) {
+            const wchar_t *end;
+            for (end = it; iswprint(*end); end++) {}
+            wstring value(it,end);
+            result.emplace_back(new label(value));
+            continue;
+        }
+    }
+
+    return result;
 }
+
 } // namespace drawdown

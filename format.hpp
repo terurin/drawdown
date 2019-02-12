@@ -1,25 +1,29 @@
 #pragma once
 #ifndef __FORMAT_HEADER_GUARD__
 #define __FORMAT_HEADER_GUARD__
-#include <wchar.h>
-#include <string>
-#include <vector>
 #include <fstream>
-
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <wchar.h>
 namespace drawdown {
 
+enum class word_type { label, end = -1, unknown = -2 };
 
-enum class charactor_type{
-    space,//非表示文字
-    mark,//演算用記号
-    bracket,//括弧記号
-    label,//数字及び文字    
+std::wstring to_wstring(word_type);
+
+struct word {
+    word_type type;
+    word(word_type _type) : type(_type) {}
 };
-charactor_type get_type(wchar_t);
 
-std::vector<std::wstring> load_words(const std::wstring&);
+struct label : public word {
+    std::wstring value;
+    label(const std::wstring &_value) : word(word_type::label), value(_value) {}
+};
 
-
+std::vector<word *> parse_words(const std::wstring &);
 
 } // namespace drawdown
 

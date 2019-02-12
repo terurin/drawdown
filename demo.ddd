@@ -1,0 +1,11 @@
+frame RC{
+    title="RC回路";
+    battery b1{volt=12_V}
+    registance r1{ohm=12_ohm}
+    capacity c1{cap=1_F}
+    wire vcc,gnd,sig;
+    package a{vcc,gnd,sig}
+    vcc ~ b1 ~ gnd;
+    vcc ~ r1 ~ sig ~ c1 ~ gnd;
+    
+} 

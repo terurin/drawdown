@@ -1,2 +1,6 @@
  BasedOnStyle: LLVM
  Standard: Cpp11
+ IndentWidth: 4
+ AllowShortBlocksOnASingleLine: true
+ AllowShortCaseLabelsOnASingleLine: true
+ AllowShortLoopsOnASingleLine: true
