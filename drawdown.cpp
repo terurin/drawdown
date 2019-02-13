@@ -16,9 +16,10 @@ int main(int argc,char** argv){
         ss<<line<<endl;
     }
     wcout<<"result"<<endl;
-    auto list = parse_words(ss.str());
-    for (auto &it: list){
-        //wcout<<it.value<<":"<<(int)it.type<<endl;
+    tokener tokenalize(ss.str());
+    const auto &list = tokenalize.get_list();
+    for (shared_ptr<word>it: list){
+        wcout<<it->to_wstring()<<endl;
     }
 
 
