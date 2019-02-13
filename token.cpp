@@ -1,8 +1,8 @@
-#include "format.hpp"
+#include "token.hpp"
 #include <cwctype>
+#include <math.h>
 #include <sstream>
 #include <stdlib.h>
-#include <math.h>
 namespace drawdown {
 using namespace std;
 std::wstring to_wstring(word_type word) {
@@ -13,10 +13,15 @@ std::wstring to_wstring(word_type word) {
     case word_type::add: return L"add";
     case word_type::sub: return L"sub";
     case word_type::mul: return L"mul";
+    case word_type::exp: return L"exp";
     case word_type::div: return L"div";
+    case word_type::para: return L"para";
     case word_type::dot: return L"dot";
+    case word_type::bracket_begin: return L"(";
+    case word_type::bracket_end: return L")";
     case word_type::block_begin: return L"{";
     case word_type::block_end: return L"}";
+    case word_type::newline: return L"newline";
     case word_type::end: return L"end";
     default: return L"unknown";
     }
@@ -67,69 +72,30 @@ void tokener::parse() const {
             list.emplace_back(new label(value));
             continue;
         }
-        if (parse_numeral(it)) {
+        if (parse_numeral(it) || parse_op(it) || parse_bracket(it)) {
             continue;
         }
-        // block
+
         if (*it == L'.') {
             list.emplace_back(new word(word_type::dot));
             it++;
             continue;
         }
-        if (*it == L'{') {
-            list.emplace_back(new word(word_type::block_end));
-            it++;
-            continue;
-        }
         // operator
-
         if (*it == L';') {
             list.emplace_back(new word(word_type::line_end));
             it++;
             continue;
         }
-        // operator
-        if (*it == L'=') {
-            list.emplace_back(new word(word_type::add));
+        if (*it == L'\n') {
+            list.emplace_back(new word(word_type::newline));
             it++;
-            continue;
         }
-        if (*it == L'+') {
-            list.emplace_back(new word(word_type::add));
-            it++;
-            continue;
-        }
-        if (*it == L'-') {
-            list.emplace_back(new word(word_type::sub));
-            it++;
-            continue;
-        }
-        if (*it == L'*') {
-            list.emplace_back(new word(word_type::mul));
-            it++;
-            continue;
-        }
-        if (*it == L'/') {
-            list.emplace_back(new word(word_type::div));
-            it++;
-            continue;
-        }
-        if (*it == L'^') {
-            list.emplace_back(new word(word_type::div));
-            it++;
-            continue;
-        }
-        // space
-        if (iswspace(*it)) {
-            it++;
-            continue;
-        }
-        it++;
     }
 }
 
 bool tokener::parse_numeral(const wchar_t *&it) const {
-
+    //読み込みに使う関数を定義
     auto load_integer = [](const wchar_t *&kt) {
         int result{0};
         for (; iswdigit(*kt); kt++) {
@@ -144,7 +110,7 @@ bool tokener::parse_numeral(const wchar_t *&it) const {
         }
         return result;
     };
-
+    //対象か?
     const wchar_t *jt{it};
     if (!iswdigit(*jt)) {
         return false;
@@ -157,19 +123,83 @@ bool tokener::parse_numeral(const wchar_t *&it) const {
         it = jt;
         return true;
     };
-    //load point
-    double result=number;
+    // load point
+    double result = number;
     if (*jt == L'.') {
         jt++;
-        result+=load_point(jt);
+        result += load_point(jt);
     }
-    if (*jt ==L'e'||*jt==L'E'){
+    if (*jt == L'e' || *jt == L'E') {
         jt++;
-        result*=exp10(load_integer(jt));
+        result *= exp10(load_integer(jt));
     }
     list.emplace_back(new real(result));
-    it=jt;
+    it = jt;
     return true;
+}
+
+bool tokener::parse_op(const wchar_t *&it) const {
+    if (*it == L'=') {
+        list.emplace_back(new word(word_type::set));
+        it++;
+        return true;
+    }
+    if (*it == L'+') {
+        list.emplace_back(new word(word_type::add));
+        it++;
+        return true;
+    }
+    if (*it == L'-') {
+        list.emplace_back(new word(word_type::sub));
+        it++;
+        return true;
+    }
+    if (*it == L'*') {
+        it++;
+        if (*it == L'*') {
+            it++;
+            list.emplace_back(new word(word_type::exp));
+        } else {
+            list.emplace_back(new word(word_type::mul));
+        }
+        return true;
+    }
+    if (*it == L'/') {
+        it++;
+        if (*it == L'/') {
+            it++;
+            list.emplace_back(new word(word_type::para));
+        } else {
+            list.emplace_back(new word(word_type::div));
+        }
+        return true;
+    }
+    return false;
+}
+
+bool tokener::parse_bracket(const wchar_t *&it) const {
+    if (*it == L'(') {
+        list.emplace_back(new word(word_type::bracket_begin));
+        it++;
+        return true;
+    }
+    if (*it == L')') {
+        list.emplace_back(new word(word_type::bracket_end));
+        it++;
+        return true;
+    }
+
+    if (*it == L'{') {
+        list.emplace_back(new word(word_type::block_begin));
+        it++;
+        return true;
+    }
+    if (*it == L'}') {
+        list.emplace_back(new word(word_type::block_end));
+        it++;
+        return true;
+    }
+    return false;
 }
 
 } // namespace drawdown
