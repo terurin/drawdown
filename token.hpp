@@ -32,9 +32,11 @@ enum class word_type {
     block_begin,//{
     block_end, //}
     line_end,
-    end = -1,
-    newline=-2,
-    unknown = -3
+    end ,
+    newline,
+    unknown ,
+    //keyword
+    keyword_frame
 };
 
 std::wstring to_wstring(word_type);
@@ -67,6 +69,9 @@ struct real : public word {
     virtual std::wstring to_wstring() const;
 };
 
+
+
+
 class tokener final {
     const std::wstring text;
     mutable std::vector<std::shared_ptr<word>> list;
@@ -83,6 +88,7 @@ class tokener final {
     bool parse_numeral(const wchar_t *&pos) const;
     bool parse_op(const wchar_t *&pos) const;
     bool parse_bracket(const wchar_t *&pos) const;
+    bool parse_text(const wchar_t*& pos)const;
 };
 
 } // namespace drawdown

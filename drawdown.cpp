@@ -14,7 +14,7 @@ int main(int argc,char** argv){
     wstringstream ss;
     wcout<<"please input [ctrl + D]"<<endl;
     while( getline(wcin,line)){
-        ss<<line<<endl;
+        ss<<line<<L'\n';
     }
     wcout<<"result"<<endl;
     tokener tokenalize(ss.str());

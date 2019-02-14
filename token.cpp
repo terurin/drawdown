@@ -3,6 +3,7 @@
 #include <math.h>
 #include <sstream>
 #include <stdlib.h>
+#include <iostream>
 namespace drawdown {
 using namespace std;
 std::wstring to_wstring(word_type word) {
@@ -23,6 +24,7 @@ std::wstring to_wstring(word_type word) {
     case word_type::block_end: return L"}";
     case word_type::newline: return L"newline";
     case word_type::end: return L"end";
+    case word_type::keyword_frame: return L"frame";
     default: return L"unknown";
     }
 }
@@ -63,19 +65,15 @@ const std::vector<shared_ptr<word>> &tokener::get_list() const {
 
 void tokener::parse() const {
     for (const wchar_t *it = text.c_str(); *it != L'\0';) {
-
-        // label
-        if (iswalpha(*it)) {
-            const wchar_t *begin = it;
-            for (; iswalnum(*it); it++) {}
-            wstring value(begin, it);
-            list.emplace_back(new label(value));
+        if (parse_text(it)){
+            continue;
+        }else if ( parse_numeral(it) ) {
+            continue;
+        }else if  ( parse_op(it)){
+            continue;
+        }else if (parse_bracket(it)){
             continue;
         }
-        if (parse_numeral(it) || parse_op(it) || parse_bracket(it)) {
-            continue;
-        }
-
         if (*it == L'.') {
             list.emplace_back(new word(word_type::dot));
             it++;
@@ -90,7 +88,16 @@ void tokener::parse() const {
         if (*it == L'\n') {
             list.emplace_back(new word(word_type::newline));
             it++;
+            continue;
         }
+        if (*it==L' '||*it==L'\r'){
+            it++;
+            continue;
+        }
+
+        wcout<<L"Error:"<<hex<<(int)*it<<endl;
+        list.emplace_back(new word(word_type::unknown));
+        it++;
     }
 }
 
@@ -200,6 +207,24 @@ bool tokener::parse_bracket(const wchar_t *&it) const {
         return true;
     }
     return false;
+}
+
+bool tokener::parse_text(const wchar_t *&it) const {
+    // label
+    if (!iswalpha(*it)) {
+        return false;
+    }
+
+    const wchar_t *begin = it;
+    for (it++; iswalnum(*it); it++) {}
+    wstring value(begin, it);
+    if (value == L"frame") {
+        list.emplace_back(new word(word_type::keyword_frame));
+    } else {
+        list.emplace_back(new label(value));
+    }
+
+    return true;
 }
 
 } // namespace drawdown
