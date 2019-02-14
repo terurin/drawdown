@@ -31,7 +31,7 @@ std::wstring to_wstring(token_type token) {
 
 std::wstring token::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type);
+    ss << L"type:" << drawdown::to_wstring(type) <<L",pos:"<<pos;
     return ss.str();
 }
 
@@ -39,19 +39,19 @@ bool token::operator==(const token &cmp) const { return type == cmp.type; }
 
 std::wstring label::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) << ",value:" << value;
+    ss << L"type:" << drawdown::to_wstring(type) << L",value:" << value<<L",pos:"<<pos;
     return ss.str();
 }
 
 std::wstring integer::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) << ",value:" << value;
+    ss << L"type:" << drawdown::to_wstring(type) << L",value:" << value<<L",pos:"<<pos;
     return ss.str();
 }
 
 std::wstring real::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) << ",value:" << value;
+    ss << L"type:" << drawdown::to_wstring(type) <<L",value:" << value<<L",pos:"<<pos;
     return ss.str();
 }
 
@@ -75,18 +75,18 @@ void token_builder::parse() const {
             continue;
         }
         if (*it == L'.') {
-            list.emplace_back(new token(token_type::dot));
+            list.emplace_back(new token(token_type::dot,diff(it)));
             it++;
             continue;
         }
         // operator
         if (*it == L';') {
-            list.emplace_back(new token(token_type::line_end));
+            list.emplace_back(new token(token_type::line_end,diff(it)));
             it++;
             continue;
         }
         if (*it == L'\n') {
-            list.emplace_back(new token(token_type::newline));
+            list.emplace_back(new token(token_type::newline,diff(it)));
             it++;
             continue;
         }
@@ -96,7 +96,7 @@ void token_builder::parse() const {
         }
 
         wcout<<L"Error:"<<hex<<(int)*it<<endl;
-        list.emplace_back(new token(token_type::unknown));
+        list.emplace_back(new token(token_type::unknown,diff(it)));
         it++;
     }
     list.emplace_back(new token(token_type::end));
@@ -127,7 +127,7 @@ bool token_builder::parse_numeral(const wchar_t *&it) const {
     const int number{load_integer(jt)};
     // is integer ?
     if (*jt != L'.' && *jt != L'e' && *jt != 'E') {
-        list.emplace_back(new integer(number));
+        list.emplace_back(new integer(number,diff(it)));
         it = jt;
         return true;
     };
@@ -141,24 +141,24 @@ bool token_builder::parse_numeral(const wchar_t *&it) const {
         jt++;
         result *= exp10(load_integer(jt));
     }
-    list.emplace_back(new real(result));
+    list.emplace_back(new real(result,diff(it)));
     it = jt;
     return true;
 }
 
 bool token_builder::parse_op(const wchar_t *&it) const {
     if (*it == L'=') {
-        list.emplace_back(new token(token_type::set));
+        list.emplace_back(new token(token_type::set,diff(it)));
         it++;
         return true;
     }
     if (*it == L'+') {
-        list.emplace_back(new token(token_type::add));
+        list.emplace_back(new token(token_type::add,diff(it)));
         it++;
         return true;
     }
     if (*it == L'-') {
-        list.emplace_back(new token(token_type::sub));
+        list.emplace_back(new token(token_type::sub,diff(it)));
         it++;
         return true;
     }
@@ -166,9 +166,9 @@ bool token_builder::parse_op(const wchar_t *&it) const {
         it++;
         if (*it == L'*') {
             it++;
-            list.emplace_back(new token(token_type::exp));
+            list.emplace_back(new token(token_type::exp,diff(it)));
         } else {
-            list.emplace_back(new token(token_type::mul));
+            list.emplace_back(new token(token_type::mul,diff(it)));
         }
         return true;
     }
@@ -176,9 +176,9 @@ bool token_builder::parse_op(const wchar_t *&it) const {
         it++;
         if (*it == L'/') {
             it++;
-            list.emplace_back(new token(token_type::para));
+            list.emplace_back(new token(token_type::para,diff(it)));
         } else {
-            list.emplace_back(new token(token_type::div));
+            list.emplace_back(new token(token_type::div,diff(it)));
         }
         return true;
     }
@@ -187,23 +187,23 @@ bool token_builder::parse_op(const wchar_t *&it) const {
 
 bool token_builder::parse_bracket(const wchar_t *&it) const {
     if (*it == L'(') {
-        list.emplace_back(new token(token_type::bracket_begin));
+        list.emplace_back(new token(token_type::bracket_begin,diff(it)));
         it++;
         return true;
     }
     if (*it == L')') {
-        list.emplace_back(new token(token_type::bracket_end));
+        list.emplace_back(new token(token_type::bracket_end,diff(it)));
         it++;
         return true;
     }
 
     if (*it == L'{') {
-        list.emplace_back(new token(token_type::block_begin));
+        list.emplace_back(new token(token_type::block_begin,diff(it)));
         it++;
         return true;
     }
     if (*it == L'}') {
-        list.emplace_back(new token(token_type::block_end));
+        list.emplace_back(new token(token_type::block_end,diff(it)));
         it++;
         return true;
     }
@@ -220,9 +220,9 @@ bool token_builder::parse_text(const wchar_t *&it) const {
     for (it++; iswalnum(*it); it++) {}
     wstring value(begin, it);
     if (value == L"frame") {
-        list.emplace_back(new token(token_type::keyword_frame));
+        list.emplace_back(new token(token_type::keyword_frame,diff(it)));
     } else {
-        list.emplace_back(new label(value));
+        list.emplace_back(new label(value,diff(it)));
     }
 
     return true;

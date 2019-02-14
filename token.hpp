@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <wchar.h>
+#include <cstddef>
 namespace drawdown {
 
 enum class token_type {
@@ -43,7 +44,8 @@ std::wstring to_wstring(token_type);
 
 struct token {
     token_type type;
-    token(token_type _type) : type(_type) {}
+    ptrdiff_t pos;
+    token(token_type _type,ptrdiff_t _pos=0) : type(_type),pos(_pos)  {}
     token(const token &) = default;
     virtual ~token() = default;
     virtual std::wstring to_wstring() const;
@@ -51,21 +53,25 @@ struct token {
     bool operator!=(const token &cmp) { return !(*this == cmp); }
 };
 
+//省略名定義
+using token_ptr = std::shared_ptr<token>;
+
+
 struct label : public token {
     std::wstring value;
-    label(const std::wstring &_value) : token(token_type::label), value(_value) {}
+    label(const std::wstring &_value,ptrdiff_t _pos=0) : token(token_type::label,_pos), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
 
 struct integer : public token {
     int value;
-    integer(int _value) : token(token_type::integer), value(_value) {}
+    integer(int _value,ptrdiff_t _pos=0) : token(token_type::integer,_pos), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
 
 struct real : public token {
     double value;
-    real(double _value) : token(token_type::real), value(_value) {}
+    real(double _value,ptrdiff_t _pos=0) : token(token_type::real,_pos), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
 
@@ -89,6 +95,9 @@ class token_builder final {
     bool parse_op(const wchar_t *&pos) const;
     bool parse_bracket(const wchar_t *&pos) const;
     bool parse_text(const wchar_t*& pos)const;
+    ptrdiff_t diff(const wchar_t* a)const{
+        return a-text.c_str();
+    }
 };
 
 } // namespace drawdown
