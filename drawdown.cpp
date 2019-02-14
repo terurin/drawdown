@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include "token.hpp"
+#include "ast.hpp"
 using namespace std;
 using namespace drawdown;
 
