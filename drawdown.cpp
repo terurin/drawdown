@@ -5,11 +5,13 @@
 #include <string>
 #include <vector>
 using namespace std;
-using namespace drawdown;
+using namespace drawdown::ast;
+using namespace drawdown::token;
 
 static vector<wstring> load_words();
 int main(int argc, char **argv) {
     using namespace std;
+    setlocale( LC_ALL, "" );
     wstring line;
     wstringstream ss;
     wcout << "please input [ctrl + D]" << endl;
@@ -20,6 +22,7 @@ int main(int argc, char **argv) {
     for (shared_ptr<token> it : list) { wcout << it->to_wstring() << endl; }
 
     ast_builder builder(tokenalize.get_list());
+    wcout<<L"LISP風出力"<<endl;
     if (builder.get_ast() != nullptr) {
         wcout << builder.get_ast()->to_wstring() << endl;
     }

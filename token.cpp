@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <iostream>
-namespace drawdown {
+namespace drawdown ::token{
 using namespace std;
 std::wstring to_wstring(token_type token) {
     switch (token) {
@@ -31,7 +31,7 @@ std::wstring to_wstring(token_type token) {
 
 std::wstring token::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) <<L",pos:"<<pos;
+    ss << L"type:" << drawdown::token::to_wstring(type) <<L",pos:"<<pos;
     return ss.str();
 }
 
@@ -39,19 +39,19 @@ bool token::operator==(const token &cmp) const { return type == cmp.type; }
 
 std::wstring label::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) << L",value:" << value<<L",pos:"<<pos;
+    ss << L"type:" << drawdown::token::to_wstring(type) << L",value:" << value<<L",pos:"<<pos;
     return ss.str();
 }
 
 std::wstring integer::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) << L",value:" << value<<L",pos:"<<pos;
+    ss << L"type:" << drawdown::token::to_wstring(type) << L",value:" << value<<L",pos:"<<pos;
     return ss.str();
 }
 
 std::wstring real::to_wstring() const {
     wstringstream ss;
-    ss << L"type:" << drawdown::to_wstring(type) <<L",value:" << value<<L",pos:"<<pos;
+    ss << L"type:" << drawdown::token::to_wstring(type) <<L",value:" << value<<L",pos:"<<pos;
     return ss.str();
 }
 

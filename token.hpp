@@ -8,7 +8,7 @@
 #include <vector>
 #include <wchar.h>
 #include <cstddef>
-namespace drawdown {
+namespace drawdown ::token{
 
 enum class token_type {
     label, //
@@ -74,9 +74,6 @@ struct real : public token {
     real(double _value,ptrdiff_t _pos=0) : token(token_type::real,_pos), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
-
-
-
 
 class token_builder final {
     const std::wstring text;
