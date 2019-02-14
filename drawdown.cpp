@@ -1,5 +1,6 @@
 #include "ast.hpp"
 #include "token.hpp"
+#include "machine.hpp"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -7,7 +8,7 @@
 using namespace std;
 using namespace drawdown::ast;
 using namespace drawdown::token;
-
+using namespace drawdown::machine;
 static vector<wstring> load_words();
 int main(int argc, char **argv) {
     using namespace std;
@@ -26,5 +27,9 @@ int main(int argc, char **argv) {
     if (builder.get_ast() != nullptr) {
         wcout << builder.get_ast()->to_wstring() << endl;
     }
+    //machine runner (builder.get_ast());
+    //runner.run();
+
+
     return 0;
 }

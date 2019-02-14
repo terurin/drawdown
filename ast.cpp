@@ -5,7 +5,7 @@ namespace drawdown ::ast {
 
 using namespace std;
 using namespace token;
-ast_ptr ast_builder::get_ast() const {
+const ast_ptr ast_builder::get_ast() const {
     if (root == nullptr) {
         root = build();
     }
@@ -22,6 +22,10 @@ ast_ptr ast_builder::build() const {
 }
 
 ast_ptr ast_builder::parse(token_iterator &it) const { return parse_set(it); }
+
+ast_ptr ast_builder::parse_frame(token_iterator &it) const {
+    return parse_set(it);
+}
 
 ast_ptr ast_builder::parse_set(token_iterator &it) const {
     if ((*it)->type == token_type::end) {
@@ -119,6 +123,7 @@ std::wstring to_wstring(ast_type t) {
     case ast_type::exp: return L"exp";
     case ast_type::para: return L"para";
     case ast_type::set: return L"set";
+    case ast_type::frame:return L"frame";
     default: return L"unknown";
     }
 }
@@ -147,6 +152,14 @@ wstring ast_int::to_wstring() const {
     wstringstream wss;
     wss << L"(" << drawdown::ast::to_wstring(type);
     wss << L" " << value << L")";
+    return wss.str();
+}
+
+wstring ast_frame::to_wstring() const {
+    wstringstream wss;
+    wss << L"(" << drawdown::ast::to_wstring(type);
+    wss << L" " << name;
+    wss << L" " << right->to_wstring() << L")";
     return wss.str();
 }
 

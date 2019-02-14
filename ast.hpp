@@ -18,11 +18,12 @@ class ast_builder final {
         : tokens(_tokens) {}
     ast_builder(const ast &) = delete;
     ~ast_builder() = default;
-    ast_ptr get_ast() const;
+    const ast_ptr get_ast() const;
 
   private:
     ast_ptr build() const;
     ast_ptr parse( token_iterator &it) const;
+    ast_ptr parse_frame(token_iterator& it)const;
     ast_ptr parse_set( token_iterator &it) const;
     ast_ptr parse_add_sub(token_iterator &it) const;
     ast_ptr parse_mul_div(token_iterator &it)const;
@@ -30,7 +31,7 @@ class ast_builder final {
     ast_ptr parse_tail( token_iterator &it) const;
 };
 
-enum class ast_type { unknown, add, sub, mul, div,exp,para, set,integer, label ,bracket};
+enum class ast_type { unknown, add, sub, mul, div,exp,para, set,integer, label ,bracket,frame};
 
 std::wstring to_wstring(ast_type);
 
@@ -60,6 +61,16 @@ struct ast_int : public ast {
     virtual ~ast_int() = default;
     virtual std::wstring to_wstring() const; // LISP形式で出力する
 };
+
+struct ast_frame:public ast{
+    const std::wstring name;
+    ast_frame(const std::wstring& _name,ast_ptr _right):
+    ast(ast_type::frame,_right),name(_name){}
+    ast_frame(const ast_frame&)=default;
+    virtual ~ast_frame()=default;
+    virtual std::wstring to_wstring() const; // LISP形式で出力する
+};
+
 
 
 } // namespace drawdown
