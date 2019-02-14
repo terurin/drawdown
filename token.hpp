@@ -9,7 +9,7 @@
 #include <wchar.h>
 namespace drawdown {
 
-enum class word_type {
+enum class token_type {
     label, //
     integer,
     real,
@@ -39,49 +39,49 @@ enum class word_type {
     keyword_frame
 };
 
-std::wstring to_wstring(word_type);
+std::wstring to_wstring(token_type);
 
-struct word {
-    word_type type;
-    word(word_type _type) : type(_type) {}
-    word(const word &) = default;
-    virtual ~word() = default;
+struct token {
+    token_type type;
+    token(token_type _type) : type(_type) {}
+    token(const token &) = default;
+    virtual ~token() = default;
     virtual std::wstring to_wstring() const;
-    virtual bool operator==(const word &) const;
-    bool operator!=(const word &cmp) { return !(*this == cmp); }
+    virtual bool operator==(const token &) const;
+    bool operator!=(const token &cmp) { return !(*this == cmp); }
 };
 
-struct label : public word {
+struct label : public token {
     std::wstring value;
-    label(const std::wstring &_value) : word(word_type::label), value(_value) {}
+    label(const std::wstring &_value) : token(token_type::label), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
 
-struct integer : public word {
+struct integer : public token {
     int value;
-    integer(int _value) : word(word_type::integer), value(_value) {}
+    integer(int _value) : token(token_type::integer), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
 
-struct real : public word {
+struct real : public token {
     double value;
-    real(double _value) : word(word_type::real), value(_value) {}
+    real(double _value) : token(token_type::real), value(_value) {}
     virtual std::wstring to_wstring() const;
 };
 
 
 
 
-class tokener final {
+class token_builder final {
     const std::wstring text;
-    mutable std::vector<std::shared_ptr<word>> list;
+    mutable std::vector<std::shared_ptr<token>> list;
     mutable bool is_parsed{false};
 
   public:
-    tokener(const std::wstring &_text) : text(_text) {}
-    tokener(const tokener &) = delete;
-    ~tokener() = default;
-    const std::vector<std::shared_ptr<word>> &get_list() const; //遅延実行
+    token_builder(const std::wstring &_text) : text(_text) {}
+    token_builder(const token_builder &) = delete;
+    ~token_builder() = default;
+    const std::vector<std::shared_ptr<token>> &get_list() const; //遅延実行
 
   private:
     void parse() const;

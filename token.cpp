@@ -6,36 +6,36 @@
 #include <iostream>
 namespace drawdown {
 using namespace std;
-std::wstring to_wstring(word_type word) {
-    switch (word) {
-    case word_type::label: return L"label";
-    case word_type::integer: return L"integer";
-    case word_type::real: return L"real";
-    case word_type::add: return L"add";
-    case word_type::sub: return L"sub";
-    case word_type::mul: return L"mul";
-    case word_type::exp: return L"exp";
-    case word_type::div: return L"div";
-    case word_type::para: return L"para";
-    case word_type::dot: return L"dot";
-    case word_type::bracket_begin: return L"(";
-    case word_type::bracket_end: return L")";
-    case word_type::block_begin: return L"{";
-    case word_type::block_end: return L"}";
-    case word_type::newline: return L"newline";
-    case word_type::end: return L"end";
-    case word_type::keyword_frame: return L"frame";
+std::wstring to_wstring(token_type token) {
+    switch (token) {
+    case token_type::label: return L"label";
+    case token_type::integer: return L"integer";
+    case token_type::real: return L"real";
+    case token_type::add: return L"add";
+    case token_type::sub: return L"sub";
+    case token_type::mul: return L"mul";
+    case token_type::exp: return L"exp";
+    case token_type::div: return L"div";
+    case token_type::para: return L"para";
+    case token_type::dot: return L"dot";
+    case token_type::bracket_begin: return L"(";
+    case token_type::bracket_end: return L")";
+    case token_type::block_begin: return L"{";
+    case token_type::block_end: return L"}";
+    case token_type::newline: return L"newline";
+    case token_type::end: return L"end";
+    case token_type::keyword_frame: return L"frame";
     default: return L"unknown";
     }
 }
 
-std::wstring word::to_wstring() const {
+std::wstring token::to_wstring() const {
     wstringstream ss;
     ss << L"type:" << drawdown::to_wstring(type);
     return ss.str();
 }
 
-bool word::operator==(const word &cmp) const { return type == cmp.type; }
+bool token::operator==(const token &cmp) const { return type == cmp.type; }
 
 std::wstring label::to_wstring() const {
     wstringstream ss;
@@ -55,7 +55,7 @@ std::wstring real::to_wstring() const {
     return ss.str();
 }
 
-const std::vector<shared_ptr<word>> &tokener::get_list() const {
+const std::vector<shared_ptr<token>> &token_builder::get_list() const {
     if (!is_parsed) {
         parse();
         is_parsed = true;
@@ -63,7 +63,7 @@ const std::vector<shared_ptr<word>> &tokener::get_list() const {
     return list;
 }
 
-void tokener::parse() const {
+void token_builder::parse() const {
     for (const wchar_t *it = text.c_str(); *it != L'\0';) {
         if (parse_text(it)){
             continue;
@@ -75,18 +75,18 @@ void tokener::parse() const {
             continue;
         }
         if (*it == L'.') {
-            list.emplace_back(new word(word_type::dot));
+            list.emplace_back(new token(token_type::dot));
             it++;
             continue;
         }
         // operator
         if (*it == L';') {
-            list.emplace_back(new word(word_type::line_end));
+            list.emplace_back(new token(token_type::line_end));
             it++;
             continue;
         }
         if (*it == L'\n') {
-            list.emplace_back(new word(word_type::newline));
+            list.emplace_back(new token(token_type::newline));
             it++;
             continue;
         }
@@ -96,12 +96,13 @@ void tokener::parse() const {
         }
 
         wcout<<L"Error:"<<hex<<(int)*it<<endl;
-        list.emplace_back(new word(word_type::unknown));
+        list.emplace_back(new token(token_type::unknown));
         it++;
     }
+    list.emplace_back(new token(token_type::end));
 }
 
-bool tokener::parse_numeral(const wchar_t *&it) const {
+bool token_builder::parse_numeral(const wchar_t *&it) const {
     //読み込みに使う関数を定義
     auto load_integer = [](const wchar_t *&kt) {
         int result{0};
@@ -145,19 +146,19 @@ bool tokener::parse_numeral(const wchar_t *&it) const {
     return true;
 }
 
-bool tokener::parse_op(const wchar_t *&it) const {
+bool token_builder::parse_op(const wchar_t *&it) const {
     if (*it == L'=') {
-        list.emplace_back(new word(word_type::set));
+        list.emplace_back(new token(token_type::set));
         it++;
         return true;
     }
     if (*it == L'+') {
-        list.emplace_back(new word(word_type::add));
+        list.emplace_back(new token(token_type::add));
         it++;
         return true;
     }
     if (*it == L'-') {
-        list.emplace_back(new word(word_type::sub));
+        list.emplace_back(new token(token_type::sub));
         it++;
         return true;
     }
@@ -165,9 +166,9 @@ bool tokener::parse_op(const wchar_t *&it) const {
         it++;
         if (*it == L'*') {
             it++;
-            list.emplace_back(new word(word_type::exp));
+            list.emplace_back(new token(token_type::exp));
         } else {
-            list.emplace_back(new word(word_type::mul));
+            list.emplace_back(new token(token_type::mul));
         }
         return true;
     }
@@ -175,41 +176,41 @@ bool tokener::parse_op(const wchar_t *&it) const {
         it++;
         if (*it == L'/') {
             it++;
-            list.emplace_back(new word(word_type::para));
+            list.emplace_back(new token(token_type::para));
         } else {
-            list.emplace_back(new word(word_type::div));
+            list.emplace_back(new token(token_type::div));
         }
         return true;
     }
     return false;
 }
 
-bool tokener::parse_bracket(const wchar_t *&it) const {
+bool token_builder::parse_bracket(const wchar_t *&it) const {
     if (*it == L'(') {
-        list.emplace_back(new word(word_type::bracket_begin));
+        list.emplace_back(new token(token_type::bracket_begin));
         it++;
         return true;
     }
     if (*it == L')') {
-        list.emplace_back(new word(word_type::bracket_end));
+        list.emplace_back(new token(token_type::bracket_end));
         it++;
         return true;
     }
 
     if (*it == L'{') {
-        list.emplace_back(new word(word_type::block_begin));
+        list.emplace_back(new token(token_type::block_begin));
         it++;
         return true;
     }
     if (*it == L'}') {
-        list.emplace_back(new word(word_type::block_end));
+        list.emplace_back(new token(token_type::block_end));
         it++;
         return true;
     }
     return false;
 }
 
-bool tokener::parse_text(const wchar_t *&it) const {
+bool token_builder::parse_text(const wchar_t *&it) const {
     // label
     if (!iswalpha(*it)) {
         return false;
@@ -219,7 +220,7 @@ bool tokener::parse_text(const wchar_t *&it) const {
     for (it++; iswalnum(*it); it++) {}
     wstring value(begin, it);
     if (value == L"frame") {
-        list.emplace_back(new word(word_type::keyword_frame));
+        list.emplace_back(new token(token_type::keyword_frame));
     } else {
         list.emplace_back(new label(value));
     }

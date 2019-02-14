@@ -17,9 +17,9 @@ int main(int argc,char** argv){
         ss<<line<<L'\n';
     }
     wcout<<"result"<<endl;
-    tokener tokenalize(ss.str());
+    token_builder tokenalize(ss.str());
     const auto &list = tokenalize.get_list();
-    for (shared_ptr<word>it: list){
+    for (shared_ptr<token>it: list){
         wcout<<it->to_wstring()<<endl;
     }
 
