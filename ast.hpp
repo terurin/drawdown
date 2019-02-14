@@ -7,7 +7,6 @@ namespace drawdown {
 
 struct ast;
 using ast_ptr = std::shared_ptr<ast>;
-
 class ast_builder final {
     const std::vector<token_ptr> tokens;
     using token_iterator = std::vector<token_ptr>::const_iterator;
@@ -23,21 +22,40 @@ class ast_builder final {
 
   private:
     ast_ptr build() const;
-    ast_ptr parse(const token_iterator &it) const;
-    ast_ptr parse_add(const token_iterator &it) const;
-    ast_ptr parse_tail(const token_iterator &it) const;
+    ast_ptr parse( token_iterator &it) const;
+    ast_ptr parse_add_sub(token_iterator &it) const;
+    ast_ptr parse_tail( token_iterator &it) const;
 };
 
-enum class ast_type { unknown,add, sub, mul, div, integer, label };
+enum class ast_type { unknown, add, sub, mul, div, integer, label };
 
 std::wstring to_wstring(ast_type);
 
 struct ast {
-    ast_type type{ast_type::unknown};
-    std::shared_ptr<ast> right{nullptr}, left{nullptr};
-    ast(ast_type _type) :type(_type){}
+    const ast_type type{ast_type::unknown};
+    const ast_ptr right, left;
+    ast(ast_type _type, ast_ptr _right = nullptr, ast_ptr _left = nullptr)
+        : type(_type), right(_right), left(_left) {}
     ast(const ast &) = default;
-    virtual std::wstring to_wstring() const;//LISP形式で出力する
+    virtual ~ast() = default;
+    virtual std::wstring to_wstring() const; // LISP形式で出力する
+};
+
+struct ast_label : public ast {
+    const std::wstring label;
+    ast_label(const std::wstring &_label)
+        : ast(ast_type::label), label(_label) {}
+    ast_label(const ast_label &) = default;
+    virtual ~ast_label() = default;
+    virtual std::wstring to_wstring() const; // LISP形式で出力する
+};
+
+struct ast_int : public ast {
+    const int value;
+    ast_int(int _value) : ast(ast_type::integer), value(_value) {}
+    ast_int(const ast_int &) = default;
+    virtual ~ast_int() = default;
+    virtual std::wstring to_wstring() const; // LISP形式で出力する
 };
 
 } // namespace drawdown
